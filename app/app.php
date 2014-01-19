@@ -10,8 +10,8 @@ namespace Abandon;
 
 class App
 {
-	public $router, $github, $filesystem, $unzip, $template;
-	private $conifg, $routes, $vars;
+	public $router, $github, $filesystem, $unzip, $template, $conifg;
+	private $routes, $vars, $categories, $pages, $posts;
 
 	public function __construct()
 	{
@@ -25,40 +25,46 @@ class App
 		$this->github     = new \Github\Client();
 		$this->filesystem = new \Illuminate\Filesystem\Filesystem();
 		$this->unzip      = new \VIPSoft\Unzip\Unzip();
-		$this->template   = new \Mustache_Engine();
+		$this->template   = new \Handlebars\Handlebars();
+
+		$this->categories = new Category_model();
+		$this->posts      = new Post_model();
 	}
 
 
 
 	public function run()
 	{
-		// Set url globals from the request merge user globals if they exist
+		// Create global template variables, menus and categories
 		$this->router->respond(function($request)
 		{
 			$this->globals($request);
-			$this->menus();
+			$this->menus($request);
+			$this->vars['categories'] = $this->categories->init($request);
 		});
 
+		// Landing page
 		$this->router->respond('/', function($request){ return $this->index($request); });
+		
+		$this->router->respond('/[:category]', function($request)
+		{
+			// Check if category exists
+			if(array_key_exists($request->category, $this->categories->basic()))
+			{
+				return $this->category($request);
+			}
+
+			// Check if page exists
+			elseif(array_key_exists($request->category, $this->pages))
+			{
+				return $this->page($request);	
+			}
+
+			// Nothing found return 404
+			return $this->four_oh_four();
+		});
 
 		$this->router->dispatch();
-
-		//$this->github->authenticate($this->config['github']['token'], FALSE, \Github\Client::AUTH_URL_TOKEN);
-
-		//echo '<pre>';
-		
-		//$commits = $this->github->api('repo')->commits()->all($this->config['github']['username'], $this->config['github']['repo'], array('sha' => 'master'));
-		//print_r($commits);
-
-		//$post = $this->github->api('repo')->contents()->show($this->config['github']['username'], $this->config['github']['repo'], 'categories/notebook');
-		//print_r($post);
-
-		//echo base64_decode($post['content']);
-		
-		/*$blogzip = __DIR__.'/../public/blog.zip';
-		file_put_contents($blogzip, $this->github->api('repo')->contents()->archive($this->config['github']['username'], $this->config['github']['repo'], 'zipball'));
-		$this->unzip->extract($blogzip, __DIR__.'/../public/blog');
-		unset($blogzip);*/
 	}
 
 
@@ -75,9 +81,16 @@ class App
 	}
 
 
-	public function category()
-	{
 
+	public function category($request)
+	{
+		//echo 'Category: ' .$this->categories[$request->category];
+
+		$template = ($this->filesystem->exists($this->config['content_folder']."/category-$request->category.html")) ? "category-$request->category" : 'category';
+		
+		$this->vars['content'] = $this->template->render($this->filesystem->get($this->config['template_folder']."/$template.html"), $this->vars);
+
+		return $this->render();
 	}
 
 
@@ -112,7 +125,6 @@ class App
 		$this->vars['base_url']    = $ssl.$request->server()['HTTP_HOST'];
 		$this->vars['current_url'] = $this->vars['base_url'].$request->server()['REQUEST_URI'];
 
-
 		// Process the user globals
 		if($this->filesystem->exists($this->config['content_folder'].'/globals.json'))
 		{
@@ -131,12 +143,11 @@ class App
 	 * 
 	 * @return void
 	 */
-	private function menus()
+	private function menus($request)
 	{
 		if($this->filesystem->exists($this->config['content_folder'].'/menus.json'))
 		{
 			// Grab the menus
-			$menus = array();
 			foreach(json_decode($this->filesystem->get($this->config['content_folder'].'/menus.json')) as $key => $menu)
 			{
 				switch ($menu->type)
@@ -145,7 +156,7 @@ class App
 						foreach($menu->items as $url => $item)
 						{
 							$processed_url = (in_array(substr($url, 0, 4), array("http", "mail"))) ? $url : $this->vars['base_url'] .'/' .$url;
-							$menus[$key][] = array('url' => $processed_url, 'name' => $item);
+							$this->vars['menus'][$key][] = array('url' => $processed_url, 'title' => $item, 'active' => ('/'.$url == $request->uri() ? TRUE: FALSE));
 						}
 						break;
 					
@@ -153,7 +164,6 @@ class App
 						break;
 				}
 			}
-			$this->vars['menus'] = $menus;
 		}
 	}
 

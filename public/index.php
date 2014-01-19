@@ -20,7 +20,15 @@ require __DIR__.'/../bootstrap/autoload.php';
 |
 */
 
+global $app;
+
 $app = require_once __DIR__.'/../bootstrap/start.php';
+
+function app()
+{
+	global $app;
+	return $app;
+}
 
 /*
 |--------------------------------------------------------------------------

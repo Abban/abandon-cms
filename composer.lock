@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "c494d62c8ecaf216abefc6e54fa06fab",
+    "hash": "22f0b155677f84090671cba33bff7505",
     "packages": [
         {
             "name": "guzzle/guzzle",
@@ -365,51 +365,6 @@
             "time": "2013-11-29 21:49:31"
         },
         {
-            "name": "mustache/mustache",
-            "version": "dev-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/bobthecow/mustache.php.git",
-                "reference": "6fa8518a9acc289ee2896725d84dac052872d2a6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/bobthecow/mustache.php/zipball/6fa8518a9acc289ee2896725d84dac052872d2a6",
-                "reference": "6fa8518a9acc289ee2896725d84dac052872d2a6",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.2.4"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "Mustache": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Justin Hileman",
-                    "email": "justin@justinhileman.info",
-                    "homepage": "http://justinhileman.com"
-                }
-            ],
-            "description": "A Mustache implementation in PHP.",
-            "homepage": "https://github.com/bobthecow/mustache.php",
-            "keywords": [
-                "mustache",
-                "templating"
-            ],
-            "time": "2014-01-14 20:19:33"
-        },
-        {
             "name": "symfony/event-dispatcher",
             "version": "dev-master",
             "target-dir": "Symfony/Component/EventDispatcher",
@@ -555,6 +510,48 @@
                 "ziparchive"
             ],
             "time": "2013-07-17 17:02:02"
+        },
+        {
+            "name": "xamin/handlebars.php",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/XaminProject/handlebars.php.git",
+                "reference": "58c33c1ba70077cad124204da2a8751bb47cf397"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/XaminProject/handlebars.php/zipball/58c33c1ba70077cad124204da2a8751bb47cf397",
+                "reference": "58c33c1ba70077cad124204da2a8751bb47cf397",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.*",
+                "squizlabs/php_codesniffer": "1.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Handlebars": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "fzerorubigd",
+                    "email": "fzerorubigd@gmail.com"
+                },
+                {
+                    "name": "Behrooz Shabani (everplays)",
+                    "email": "everplays@gmail.com"
+                }
+            ],
+            "description": "Handlebars processor for php",
+            "homepage": "https://github.com/XaminProject/handlebars.php",
+            "time": "2014-01-17 07:52:57"
         }
     ],
     "packages-dev": [
@@ -568,7 +565,7 @@
         "illuminate/filesystem": 20,
         "michelf/php-markdown": 20,
         "klein/klein": 20,
-        "mustache/mustache": 20,
+        "xamin/handlebars.php": 20,
         "vipsoft/unzip": 20
     },
     "platform": [

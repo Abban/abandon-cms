@@ -3,3 +3,4 @@
 vendor
 public/templates/abandon
 public/content/*
+app/models/cache/*

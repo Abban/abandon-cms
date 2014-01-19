@@ -8,12 +8,13 @@
 		"michelf/php-markdown": "1.4.*@dev",
 		"klein/klein": "dev-master",
 		"knplabs/github-api": "*",
-		"mustache/mustache": "dev-dev",
+		"xamin/handlebars.php": "dev-master",
 		"vipsoft/unzip": "dev-master"
 	},
 	"autoload": {
 		"classmap": [
-			"app"
+			"app",
+			"app/models"
 		]
 	},
 	"config": {
