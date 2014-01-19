@@ -1,4 +1,4 @@
 abandon-cms
 ===========
 
-Float File Blog nd Portfolio CMS
+Flat file blog and portfolio CMS

@@ -1,0 +1,23 @@
+{
+	"name": "abandon/abandon",
+	"description": "The Abandon Blogger.",
+	"keywords": ["flat file", "blog", "GitHub"],
+	"license": "MIT",
+	"require": {
+		"illuminate/filesystem": "4.2.*@dev",
+		"michelf/php-markdown": "1.4.*@dev",
+		"klein/klein": "dev-master",
+		"knplabs/github-api": "*",
+		"mustache/mustache": "dev-dev",
+		"vipsoft/unzip": "dev-master"
+	},
+	"autoload": {
+		"classmap": [
+			"app"
+		]
+	},
+	"config": {
+		"preferred-install": "dist"
+	},
+	"minimum-stability": "dev"
+}
