@@ -11,13 +11,13 @@ namespace Abandon;
 class App
 {
 	public $router, $github, $filesystem, $unzip, $template;
-	private $conifg, $routes, $globals;
+	private $conifg, $routes, $vars;
 
 	public function __construct()
 	{
 		$this->config = include_once 'config.php';
 		$this->routes = include_once 'routes.php';
-		$this->globals = include_once 'globals.php';
+		$this->vars   = include_once 'globals.php';
 		
 		$this->debug();
 
@@ -33,7 +33,11 @@ class App
 	public function run()
 	{
 		// Set url globals from the request merge user globals if they exist
-		$this->router->respond(function($request){ $this->globals($request); });
+		$this->router->respond(function($request)
+		{
+			$this->globals($request);
+			$this->menus();
+		});
 
 		$this->router->respond('/', function($request){ return $this->index($request); });
 
@@ -66,7 +70,7 @@ class App
 
 	public function index($request)
 	{
-		$this->globals['content'] = $this->template->render($this->filesystem->get($this->config['template_folder'].'/index.html'), $this->globals);
+		$this->vars['content'] = $this->template->render($this->filesystem->get($this->config['template_folder'].'/index.html'), $this->vars);
 		return $this->render();
 	}
 
@@ -87,7 +91,7 @@ class App
 
 	private function render()
 	{
-		return $this->template->render($this->filesystem->get($this->config['template_folder'].'/wrapper.html'), $this->globals);
+		return $this->template->render($this->filesystem->get($this->config['template_folder'].'/wrapper.html'), $this->vars);
 	}
 
 
@@ -104,20 +108,52 @@ class App
 		$ssl = (!empty($request->server()['HTTPS']) && $request->server()['HTTPS'] != 'off') ? 'https://' : 'http://';
 
 		// Set up the template URL globals
-		$this->globals['base_path']   = $request->server()['DOCUMENT_ROOT'];
-		$this->globals['base_url']    = $ssl.$request->server()['HTTP_HOST'];
-		$this->globals['current_url'] = $this->globals['base_url'].$request->server()['REQUEST_URI'];
+		$this->vars['base_path']   = $request->server()['DOCUMENT_ROOT'];
+		$this->vars['base_url']    = $ssl.$request->server()['HTTP_HOST'];
+		$this->vars['current_url'] = $this->vars['base_url'].$request->server()['REQUEST_URI'];
 
+
+		// Process the user globals
 		if($this->filesystem->exists($this->config['content_folder'].'/globals.json'))
 		{
 			// Grab the user globals
-			$user_globals = (Array)json_decode($this->filesystem->get($this->config['content_folder'].'/globals.json'));
+			$user_globals = json_decode($this->filesystem->get($this->config['content_folder'].'/globals.json'));
 
-			// Runt them through Mustache and add them to the globals array
-			foreach($user_globals as $key => $global) $this->globals[$key] = $this->template->render($global, $this->globals);
+			// Run them through Mustache and add them to the globals array
+			foreach($user_globals as $key => $global) $this->vars[$key] = $this->template->render($global, $this->vars);
+		}
+	}
 
-			// Merge them into the global array
-			//$this->globals = array_merge($this->globals, $user_globals);
+
+
+	/**
+	 * Process user defined menus and add them as template variables
+	 * 
+	 * @return void
+	 */
+	private function menus()
+	{
+		if($this->filesystem->exists($this->config['content_folder'].'/menus.json'))
+		{
+			// Grab the menus
+			$menus = array();
+			foreach(json_decode($this->filesystem->get($this->config['content_folder'].'/menus.json')) as $key => $menu)
+			{
+				switch ($menu->type)
+				{
+					case 'manual':
+						foreach($menu->items as $url => $item)
+						{
+							$processed_url = (in_array(substr($url, 0, 4), array("http", "mail"))) ? $url : $this->vars['base_url'] .'/' .$url;
+							$menus[$key][] = array('url' => $processed_url, 'name' => $item);
+						}
+						break;
+					
+					default:
+						break;
+				}
+			}
+			$this->vars['menus'] = $menus;
 		}
 	}
 
