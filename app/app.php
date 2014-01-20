@@ -10,7 +10,7 @@ namespace Abandon;
 
 class App
 {
-	public $router, $github, $filesystem, $unzip, $template, $conifg;
+	public $router, $github, $filesystem, $unzip, $template, $conifg, $globals;
 	private $routes, $vars, $categories, $pages, $posts;
 
 	public function __construct()
@@ -40,31 +40,49 @@ class App
 		{
 			$this->globals($request);
 			$this->menus($request);
-			$this->vars['categories'] = $this->categories->init($request);
+			$this->vars['categories'] = $this->categories->get($request);
 		});
 
 		// Landing page
 		$this->router->respond('/', function($request){ return $this->index($request); });
+
+		$this->router->respond('/generate', function($request){ return $this->generate($request); });
 		
 		$this->router->respond('/[:category]', function($request)
 		{
-			// Check if category exists
-			if(array_key_exists($request->category, $this->categories->basic()))
+			if($request->category != 'generate')
 			{
-				return $this->category($request);
-			}
+				// Check if category exists
+				if(array_key_exists($request->category, $this->categories->get($request)))
+				{
+					return $this->category($request);
+				}
 
-			// Check if page exists
-			elseif(array_key_exists($request->category, $this->pages))
-			{
-				return $this->page($request);	
-			}
+				// Check if page exists
+				/*elseif(array_key_exists($request->category, $this->pages))
+				{
+					return $this->page($request);	
+				}*/
 
-			// Nothing found return 404
-			return $this->four_oh_four();
+				// Nothing found return 404
+				//return $this->four_oh_four();
+			}
+		});
+
+		$this->router->respond('/[:category]/[:post]', function($request)
+		{
+
 		});
 
 		$this->router->dispatch();
+	}
+
+
+
+	public function generate()
+	{
+		$this->categories->generate();
+		$this->posts->generate();
 	}
 
 
@@ -84,7 +102,7 @@ class App
 
 	public function category($request)
 	{
-		//echo 'Category: ' .$this->categories[$request->category];
+		$this->vars['posts'] = $this->posts->filter('category', 'equals', $request->category)->get();
 
 		$template = ($this->filesystem->exists($this->config['content_folder']."/category-$request->category.html")) ? "category-$request->category" : 'category';
 		
@@ -121,9 +139,9 @@ class App
 		$ssl = (!empty($request->server()['HTTPS']) && $request->server()['HTTPS'] != 'off') ? 'https://' : 'http://';
 
 		// Set up the template URL globals
-		$this->vars['base_path']   = $request->server()['DOCUMENT_ROOT'];
-		$this->vars['base_url']    = $ssl.$request->server()['HTTP_HOST'];
-		$this->vars['current_url'] = $this->vars['base_url'].$request->server()['REQUEST_URI'];
+		$this->vars['base_path']   = $this->globals['base_path']   = $request->server()['DOCUMENT_ROOT'];
+		$this->vars['base_url']    = $this->globals['base_url']    = $ssl.$request->server()['HTTP_HOST'];
+		$this->vars['current_url'] = $this->globals['current_url'] = $this->vars['base_url'].$request->server()['REQUEST_URI'];
 
 		// Process the user globals
 		if($this->filesystem->exists($this->config['content_folder'].'/globals.json'))

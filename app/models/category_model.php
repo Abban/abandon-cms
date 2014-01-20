@@ -10,9 +10,7 @@ namespace Abandon;
 
 class Category_model extends App_model
 {
-	private $name = 'categories';
-
-	private $vars;
+	protected $entity = 'categories';
 	public $categories;
 
 	public function __construct()
@@ -20,28 +18,33 @@ class Category_model extends App_model
 	}
 
 
-	public function init($request)
-	{
-		if(app()->filesystem->exists(app()->config['content_folder'].'/categories.json'))
-		{
-			foreach(json_decode(app()->filesystem->get(app()->config['content_folder'].'/categories.json')) as $slug => $category)
-			{
-				$this->vars[$slug] = array('url' => $this->vars['base_url'] .'/' .$slug, 'title' => $category->title);
-				$this->categories[$slug] = $category->title;
-			}
-		}
-		return $this->vars;
-	}
-
 
 	/**
-	 * Parse categories and add them as template variables
-	 * Also save them as a class variable for easy access
+	 * Looks through all posts and creates a category json
 	 * 
 	 * @return void
 	 */
-	public function basic($request)
+	public function generate()
 	{
-		return $this->categories;
+		$categories = array();
+		foreach(app()->filesystem->files(app()->config['content_folder'].'/posts') as $post)
+		{
+			//$postname = basename($post, '.md');
+			$header = $this->parse_header(app()->filesystem->get($post));
+			if(isset($header['category']))
+			{
+				$url_title = $this->url_title($header['category']);
+				$categories[$url_title]['title'] = $header['category'];
+				$categories[$url_title]['url_title'] = $url_title;
+				//$categories[$url_title]['posts'] = isset($categories[$url_title]['posts']) && isset($categories[$url_title]['status']) && $categories[$url_title]['status'] == 'Published' ? ++$categories[$url_title]['posts'] : 0;
+			}
+		}
+
+		ksort($categories);
+
+		app()->filesystem->put(app()->config['content_folder'].'/categories.json', json_encode($categories, JSON_PRETTY_PRINT));
 	}
+
+
+
 }

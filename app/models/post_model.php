@@ -10,11 +10,30 @@ namespace Abandon;
 
 class Post_model extends App_model
 {
-	private $name = 'posts';
+	protected $entity = 'posts';
+	protected $posts = FALSE;
 
-	private $vars;
 
-	public function __construct()
+
+	/**
+	 * Get all posts files and save them into a json file
+	 * 
+	 * @return void
+	 */
+	public function generate()
 	{
+		$posts = array();
+		foreach(app()->filesystem->files(app()->config['content_folder'].'/posts') as $post)
+		{
+			$postname = basename($post, '.md');
+			$header = $this->parse_header(app()->filesystem->get($post));
+			$posts[$postname] = array_merge($header, array(
+				'url_title' => $postname,
+				'url' => '/' .$header['category'] .'/' .$postname,
+				'content' => app()->filesystem->get($post)
+			));
+		}
+
+		app()->filesystem->put(app()->config['content_folder'].'/posts.json', json_encode($posts, JSON_PRETTY_PRINT));
 	}
 }
