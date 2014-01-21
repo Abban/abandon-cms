@@ -28,7 +28,7 @@ class App_model
 	{
 		$processed = array();
 
-		preg_match("#<!---(.*?)-->#s", $data, $matches);
+		preg_match("#<!--%(.*?)%-->#s", $data, $matches);
 
 		if(isset($matches[1]))
 		{
@@ -47,7 +47,6 @@ class App_model
 	public function filter($field, $operator, $value)
 	{
 		$this->filters[] = array('field' => $field, 'operator' => $operator, 'value' => $value);
-
 		return $this;
 	}
 
@@ -55,7 +54,6 @@ class App_model
 	public function order($field, $direction)
 	{
 		$this->order[$field] = $direction;
-
 		return $this;
 	}
 
@@ -64,7 +62,6 @@ class App_model
 	{
 		$this->limit = $limit;
 		$this->offset = $offset;
-
 		return $this;
 	}
 
@@ -147,11 +144,14 @@ class App_model
 	 * @param mixed $field
 	 * @param enum  $direction asc or desc
 	 */
-	protected function entity_sort(&$data, $field = FALSE, $direction = 'ASC') 
+	protected function entity_sort(&$data, $field = FALSE, $direction = 'ASC', $preserve_keys = FALSE) 
 	{
 	    $oper = ($direction == 'ASC') ? '>' : '<';
 	    if(!is_array($data)) return;
-	    usort($data, create_function('$a, $b',"return (\$a['$field'] $oper \$b['$field']);")); 
+	    
+	    $function = $preserve_keys ? 'uasort' : 'usort';
+	    $function($data, create_function('$a, $b',"return (\$a['$field'] $oper \$b['$field']);")); 
+	    
 	    reset($data);
 	}
 

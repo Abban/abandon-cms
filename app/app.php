@@ -33,14 +33,14 @@ class App
 	}
 
 
-	public function addHelpers()
+	/*public function addHelpers()
 	{
 		$this->template->addHelper('not_first', function($template, $context, $args, $source)
 		{
 			$tmp = $context->get($args);
 			return !$tmp ? $source : '';
 		});
-	}
+	}*/
 
 
 
@@ -92,6 +92,11 @@ class App
 
 
 
+	/**
+	 * Generates the json files from the posts and pages
+	 * 
+	 * @return void
+	 */
 	public function generate()
 	{
 		$this->categories->generate();
@@ -100,14 +105,27 @@ class App
 
 
 
+	/**
+	 * Loads the landing page
+	 * 
+	 * @param  object $request
+	 * @return string
+	 */
 	public function index($request)
 	{
+		$this->menus($request);
 		$this->vars['content'] = $this->template->render($this->filesystem->get($this->config['template_folder'].'/index.html'), $this->vars);
 		return $this->render();
 	}
 
 
 
+	/**
+	 * Loads the category page
+	 * 
+	 * @param  object $request
+	 * @return string
+	 */
 	public function category($request)
 	{
 		$this->vars['posts'] = $this->posts->filter('category', 'equals', $request->category)
@@ -122,6 +140,12 @@ class App
 
 
 
+	/**
+	 * Loads the post page
+	 * 
+	 * @param  object $request
+	 * @return string
+	 */
 	public function post($request)
 	{
 		$this->vars['post'] = $this->posts->filter('url_title', 'equals', $request->post)
@@ -129,6 +153,8 @@ class App
 										  ->get();
 
 		$this->vars['post'][$request->post]['content'] = $this->markdown->transform($this->vars['post'][$request->post]['content']);
+		$this->vars['post'][$request->post]['number'] = Helpers::numeral($this->vars['post'][$request->post]['number']);
+
 		$template = ($this->filesystem->exists($this->config['content_folder']."/post-$request->post.html")) ? "post-$request->post" : 'post';
 		$this->vars['content'] = $this->template->render($this->filesystem->get($this->config['template_folder']."/$template.html"), $this->vars);
 		return $this->render();
@@ -143,6 +169,11 @@ class App
 
 
 
+	/**
+	 * Render the page
+	 * 
+	 * @return string
+	 */
 	private function render()
 	{
 		return $this->template->render($this->filesystem->get($this->config['template_folder'].'/wrapper.html'), $this->vars);
@@ -171,9 +202,9 @@ class App
 		{
 			// Grab the user globals
 			$user_globals = json_decode($this->filesystem->get($this->config['content_folder'].'/globals.json'));
-
+			
 			// Run them through Mustache and add them to the globals array
-			foreach($user_globals as $key => $global) $this->vars[$key] = $this->template->render($global, $this->vars);
+			foreach($user_globals as $key => $global) $this->vars[$key] = is_string($global) ? $this->template->render($global, $this->vars) : $global;
 		}
 	}
 

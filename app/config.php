@@ -20,9 +20,5 @@ return array(
 		'token'    => '4a0b393dfdaac83eff978395a3e3befa10824627',
 	),
 
-	'meta' => array(
-		'title' => 'Abandon'
-	),
-
 	'timezone' => 'Europe/Berlin',
 );
