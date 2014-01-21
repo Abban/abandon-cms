@@ -28,9 +28,10 @@ class Post_model extends App_model
 			$postname = basename($post, '.md');
 			$header = $this->parse_header(app()->filesystem->get($post));
 			$posts[$postname] = array_merge($header, array(
+				'date'      => Helpers::relative_time(strtotime($header['date'])),
 				'url_title' => $postname,
-				'url' => '/' .$header['category'] .'/' .$postname,
-				'content' => app()->filesystem->get($post)
+				'url'       => '/' .$header['category'] .'/' .$postname,
+				'content'   => app()->filesystem->get($post),
 			));
 		}
 

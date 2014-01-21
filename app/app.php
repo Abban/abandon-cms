@@ -26,9 +26,20 @@ class App
 		$this->filesystem = new \Illuminate\Filesystem\Filesystem();
 		$this->unzip      = new \VIPSoft\Unzip\Unzip();
 		$this->template   = new \Handlebars\Handlebars();
+		$this->markdown   = new \Michelf\MarkdownExtra();
 
 		$this->categories = new Category_model();
 		$this->posts      = new Post_model();
+	}
+
+
+	public function addHelpers()
+	{
+		$this->template->addHelper('not_first', function($template, $context, $args, $source)
+		{
+			$tmp = $context->get($args);
+			return !$tmp ? $source : '';
+		});
 	}
 
 
@@ -39,7 +50,7 @@ class App
 		$this->router->respond(function($request)
 		{
 			$this->globals($request);
-			$this->menus($request);
+			//$this->menus($request);
 			$this->vars['categories'] = $this->categories->get($request);
 		});
 
@@ -52,6 +63,7 @@ class App
 		{
 			if($request->category != 'generate')
 			{
+				$this->menus($request);
 				// Check if category exists
 				if(array_key_exists($request->category, $this->categories->get($request)))
 				{
@@ -71,7 +83,8 @@ class App
 
 		$this->router->respond('/[:category]/[:post]', function($request)
 		{
-
+			$this->menus($request);
+			return $this->post($request);
 		});
 
 		$this->router->dispatch();
@@ -86,11 +99,6 @@ class App
 	}
 
 
-	public function menu()
-	{
-
-	}
-
 
 	public function index($request)
 	{
@@ -102,12 +110,27 @@ class App
 
 	public function category($request)
 	{
-		$this->vars['posts'] = $this->posts->filter('category', 'equals', $request->category)->get();
+		$this->vars['posts'] = $this->posts->filter('category', 'equals', $request->category)
+										   ->filter('status', 'equals', 'Published')
+										   ->order('date', 'DESC')
+										   ->get();
 
 		$template = ($this->filesystem->exists($this->config['content_folder']."/category-$request->category.html")) ? "category-$request->category" : 'category';
-		
 		$this->vars['content'] = $this->template->render($this->filesystem->get($this->config['template_folder']."/$template.html"), $this->vars);
+		return $this->render();
+	}
 
+
+
+	public function post($request)
+	{
+		$this->vars['post'] = $this->posts->filter('url_title', 'equals', $request->post)
+										  ->filter('status', 'equals', 'Published')
+										  ->get();
+
+		$this->vars['post'][$request->post]['content'] = $this->markdown->transform($this->vars['post'][$request->post]['content']);
+		$template = ($this->filesystem->exists($this->config['content_folder']."/post-$request->post.html")) ? "post-$request->post" : 'post';
+		$this->vars['content'] = $this->template->render($this->filesystem->get($this->config['template_folder']."/$template.html"), $this->vars);
 		return $this->render();
 	}
 
@@ -171,10 +194,13 @@ class App
 				switch ($menu->type)
 				{
 					case 'manual':
-						foreach($menu->items as $url => $item)
+						foreach($menu->items as $item)
 						{
-							$processed_url = (in_array(substr($url, 0, 4), array("http", "mail"))) ? $url : $this->vars['base_url'] .'/' .$url;
-							$this->vars['menus'][$key][] = array('url' => $processed_url, 'title' => $item, 'active' => ('/'.$url == $request->uri() ? TRUE: FALSE));
+							$active = FALSE;
+							if($item->type == 'category') $active = ($item->url == $request->category);
+
+							$processed_url = (in_array(substr($item->url, 0, 4), array("http", "mail"))) ? $item->url : $this->vars['base_url'] .'/' .$item->url;
+							$this->vars['menus'][$key][] = array('url' => $processed_url, 'title' => $item->title, 'active' => $active);
 						}
 						break;
 					

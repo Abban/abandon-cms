@@ -21,6 +21,8 @@ return array(
 	),
 
 	'meta' => array(
-		'title' => 'Ab'
+		'title' => 'Abandon'
 	),
+
+	'timezone' => 'Europe/Berlin',
 );

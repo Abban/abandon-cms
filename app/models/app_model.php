@@ -127,7 +127,32 @@ class App_model
 			}
 		}
 
+		if($this->order)
+		{
+			list($field, $direction) = each($this->order);
+			$this->entity_sort($data, $field, $direction);
+		}
+
 		return $data;
+	}
+
+
+
+ 
+	/*
+	 * Sort the results
+	 *
+	 *
+	 * @param array $data
+	 * @param mixed $field
+	 * @param enum  $direction asc or desc
+	 */
+	protected function entity_sort(&$data, $field = FALSE, $direction = 'ASC') 
+	{
+	    $oper = ($direction == 'ASC') ? '>' : '<';
+	    if(!is_array($data)) return;
+	    usort($data, create_function('$a, $b',"return (\$a['$field'] $oper \$b['$field']);")); 
+	    reset($data);
 	}
 
 
